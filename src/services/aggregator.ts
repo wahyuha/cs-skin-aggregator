@@ -4,7 +4,7 @@ import {
   Warning,
   ErrorDetail,
 } from '../types';
-import { scrapeSteamMarketplace } from '../scrapers/registry';
+import { scrapeMarketplace, getAllMarketplaces } from '../scrapers/registry';
 
 export async function aggregatePrices(
   skinName: string,
@@ -12,21 +12,35 @@ export async function aggregatePrices(
 ): Promise<AggregatedResponse> {
   const startTime = Date.now();
 
+  const marketplaces = getAllMarketplaces();
+
+  if (marketplaces.length === 0) {
+    throw new Error('No marketplaces registered');
+  }
+
   try {
-    const scrapeResult = await scrapeSteamMarketplace(skinName);
-    // console.log(scrapeResult);
+    const scrapePromises = marketplaces.map(async (marketplace) => ({
+      marketplaceName: marketplace.name,
+      result: await scrapeMarketplace(marketplace, skinName),
+    }));
+  
+    const results = await Promise.allSettled(scrapePromises);
 
     const allListings: ScrapedListing[] = [];
     const marketplaceStatus: Record<string, 'success' | 'failed'> = {};
     const warnings: Warning[] = [];
     const errors: ErrorDetail[] = [];
 
-    if (scrapeResult.success) {
-      allListings.push(...scrapeResult.listings);
-      marketplaceStatus['Steam Community Market'] = 'success';
-    } else {
-      //
-    }
+    results.forEach((result) => {
+      if (result.status === 'fulfilled') {
+        const { marketplaceName, result: scrapeResult } = result.value;
+
+        if (scrapeResult.success) {
+          allListings.push(...scrapeResult.listings);
+          marketplaceStatus[marketplaceName] = 'success';
+        }
+      }
+    });
 
     const bestDeal = calculateBestDeal(allListings);
 
@@ -58,7 +72,7 @@ export async function aggregatePrices(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     const errorDetail: ErrorDetail = {
-      marketplace: 'Steam Community Market',
+      marketplace: 'Steam Community',
       error: errorMessage,
       timestamp: new Date().toISOString(),
     };
@@ -68,7 +82,7 @@ export async function aggregatePrices(
       totalListings: 0,
       bestDeal: undefined,
       allListings: undefined,
-      marketplaceStatus: { 'Steam Community Market': 'failed' },
+      marketplaceStatus: { 'Steam Community': 'failed' },
       warnings: [errorDetail],
       errors: [errorDetail],
       cached: false,

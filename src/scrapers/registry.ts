@@ -1,16 +1,28 @@
+import { Marketplace } from '../marketplaces/types';
 import { ScrapeResult } from '../types';
 import { createErrorResult, createSuccessResult, withTimeout } from './helpers';
-import { steamMarketplace } from '../marketplaces/config';
 
-export async function scrapeSteamMarketplace(skinName: string): Promise<ScrapeResult> {
+const marketplaces = new Map<string, Marketplace>();
+
+export function registerMarketplace(marketplace: Marketplace): void {
+  marketplaces.set(marketplace.name, marketplace);
+}
+
+export function getAllMarketplaces(): Marketplace[] {
+  return Array.from(marketplaces.values());
+}
+
+export async function scrapeMarketplace(
+  marketplace: Marketplace,
+  skinName: string
+): Promise<ScrapeResult> {
   try {
-    const data = await withTimeout(steamMarketplace.fetch(skinName), 10000);
-
-    const listings = steamMarketplace.transform(data, skinName);
+    const data = await withTimeout(marketplace.fetch(skinName), 10000);
+    const listings = marketplace.transform(data, skinName);
 
     if (listings.length === 0) {
       return createErrorResult(
-        `No ${steamMarketplace.name} listings found for "${skinName}"`
+        `No ${marketplace.name} listings found for "${skinName}"`
       );
     }
 

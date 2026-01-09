@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import express, { Application, Request, Response } from 'express';
 import skinRoutes from './routes/skinRoutes';
+import { registerMarketplace } from './scrapers/registry';
+import { steamMarketplace, csfloatMarketplace } from './marketplaces/config';
 
 const app: Application = express();
 const PORT = process.env.PORT || 7777;
@@ -16,6 +18,9 @@ app.get('/health', (_req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+registerMarketplace(steamMarketplace);
+registerMarketplace(csfloatMarketplace);
 
 // Routes
 app.use('/api', skinRoutes);
