@@ -21,13 +21,6 @@ export interface ScrapedListing {
     isAvailable(): Promise<boolean>;
   }
   
-  // API response interfaces
-  export interface BestDeal {
-    listing: ScrapedListing;
-    score: number;
-    reason: string;
-  }
-  
   export interface Warning {
     marketplace: string;
     error: string;
@@ -43,7 +36,7 @@ export interface ScrapedListing {
   export interface AggregatedResponse {
     skinName: string;
     totalListings: number;
-    bestDeal: BestDeal | null;
+    bestDeal?: ScrapedListing;
     allListings?: ScrapedListing[];
     marketplaceStatus?: Record<string, 'success' | 'failed'>;
     warnings?: Warning[];

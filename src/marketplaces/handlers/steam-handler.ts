@@ -42,7 +42,7 @@ export function transformSteam(
   );
 
   return filtered.map((item) => ({
-    marketplace: 'Steam Community Market',
+    marketplace: 'Steam Community',
     itemName: item.hash_name,
     price: item.sell_price,
     currency: '',
