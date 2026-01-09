@@ -52,3 +52,38 @@ Aggregator for CS GO skin prices from multiple marketplaces.
 - `GET /api/skins/:name` - Get aggregated prices for a skin
   - Query parameters:
     - `with_variant=1` - Include skin variants in results
+
+
+## High Level Architecture
+
+```mermaid
+flowchart TB
+
+    API["API Layer (Express)
+    GET /api/skins/:skinName"]
+
+    AGG["
+    AggregatorService:
+    • Orchestrates scraping
+    • Promise.allSettled
+    • Scoring logic"]
+
+
+    REG["
+    ScraperRegistry:
+    • Manages scrapers
+    • Strategy pattern"]
+
+    STEAM["SteamScraper
+    - define source
+    - normalize data"]
+    FLOAT["CSGO Float
+    - define source
+    - normalize data"]
+
+
+    API --> AGG
+    AGG --> REG
+    REG --> STEAM
+    REG --> FLOAT
+```
