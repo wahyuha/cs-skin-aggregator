@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express, { Application, Request, Response } from 'express';
+import skinRoutes from './routes/skinRoutes';
 
 const app: Application = express();
 const PORT = process.env.PORT || 7777;
@@ -8,13 +9,16 @@ const PORT = process.env.PORT || 7777;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Health check endpoint
+// Health check
 app.get('/health', (_req: Request, res: Response) => {
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
   });
 });
+
+// Routes
+app.use('/api', skinRoutes);
 
 // 404
 app.use((req: Request, res: Response) => {
